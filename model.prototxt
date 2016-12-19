@@ -19,7 +19,7 @@ layer {
   top: "dummy3"
   memory_data_param {
     batch_size: 1
-    channels: 3
+    channels: 1
     height: 100 #370
     width: 300 #1226
   }
@@ -44,7 +44,7 @@ layer {
   convolution_param {
     num_output: 32
     kernel_size: 6 
-    stride: 4          # step 4 pixels between each filter application
+    stride: 2          # step 4 pixels between each filter application
     weight_filler {
       type: "gaussian" # initialize the filters from a Gaussian
       std: 0.01        # distribution with stdev 0.01 (default mean: 0)
@@ -63,7 +63,7 @@ layer {
   convolution_param {
     num_output: 64
     kernel_size: 6 
-    stride: 4          # step 4 pixels between each filter application
+    stride: 2          # step 4 pixels between each filter application
     weight_filler {
       type: "gaussian" # initialize the filters from a Gaussian
       std: 0.01        # distribution with stdev 0.01 (default mean: 0)
@@ -82,7 +82,7 @@ layer {
   convolution_param {
     num_output: 128 
     kernel_size: 6
-    stride: 4          # step 4 pixels between each filter application
+    stride: 2          # step 4 pixels between each filter application
     weight_filler {
       type: "gaussian" # initialize the filters from a Gaussian
       std: 0.01        # distribution with stdev 0.01 (default mean: 0)

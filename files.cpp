@@ -3,6 +3,7 @@
 #define ERROR_LOADING_IMAGE													2
 
 #define NUM_IMAGES_TO_TRAIN													10
+#define CLASS_MULTIPLIER													25
 
 #include <iostream>
 #include <fstream>
@@ -15,6 +16,8 @@
 
 #include <signal.h>
 #include <ctype.h>
+
+#define USE_OPENCV
 
 #include <caffe/caffe.hpp>
 #include <caffe/solver.hpp>
@@ -87,6 +90,39 @@ Mat readImage(string imageFileName, string dir)
 	return imageResized;
 }
 
+int getClass(vector<pair<Scalar,int>> &v, Scalar color)
+{
+	for(int i = 0; i<v.size(); i++)
+	{
+		if(v[i].first == color)
+			return v[i].second;
+	}
+	v.push_back(pair<Scalar,int>(color,v.size()));
+	return v.size() - 1;
+}
+
+Mat convertImageToClasses(Mat image)
+{
+	unsigned char b,g,r;
+	Mat classifiedImage(image.size(),CV_8UC1);
+	vector<pair<Scalar,int>> classColorRelationship;
+	for(int i = 0; i < image.rows; i++)
+	{
+		for(int j = 0; j < image.cols; j++)
+		{
+			b = image.data[3 * (i * image.cols + j)];
+			g = image.data[3 * (i * image.cols + j) + 1];
+			r = image.data[3 * (i * image.cols + j) + 2];
+
+			Scalar color(b,g,r);
+			
+			classifiedImage.data[i * image.cols + j] = getClass(classColorRelationship,color);
+		}
+	}
+
+	return classifiedImage;
+}
+
 int main(void)
 {
 	vector<string> imagesTrain;
@@ -124,6 +160,7 @@ int main(void)
 
 	while(!requested_to_exit)
 	{
+		double totalLoss = 0;
 		for(int i = 0; i < NUM_IMAGES_TO_TRAIN; i++)
 		{
 			int p = rand() % imagesTrain.size();
@@ -136,12 +173,14 @@ int main(void)
 			input->AddMatVector(v,dummyLabels);
 
 			vector<Mat> vTarget;
-			vTarget.push_back(targetImage);
+			vTarget.push_back(convertImageToClasses(targetImage));
 
 			target->AddMatVector(vTarget,dummyLabels);
 
 			solver->Step(2);
+			totalLoss += net->blob_by_name("loss")->cpu_data()[0];
 		}
+		printf("total loss: %lf\n", totalLoss);
 
 		for(int i = 0; i < imagesTest.size(); i++)
 		{

@@ -1,0 +1,161 @@
+name: "SemanticSegmentation"
+
+layer {
+  name: "input"
+  type: "MemoryData"
+  top: "input"
+  top: "dummy1"
+  memory_data_param {
+    batch_size: 1
+    channels: 3
+    height: 100 #370
+    width: 300 #1226
+  }
+}
+layer {
+  name: "target"
+  type: "MemoryData"
+  top: "target"
+  top: "dummy3"
+  memory_data_param {
+    batch_size: 1
+    channels: 3
+    height: 100 #370
+    width: 300 #1226
+  }
+}
+layer {
+	name: "flatten_target"
+	type: "Flatten"
+	bottom: "target"
+	top: "flaten_target"
+}
+layer {
+  name: "silence_layer"
+  type: "Silence"
+  bottom: "dummy1"
+  bottom: "dummy3"
+}
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "input"
+  top: "conv1"
+  convolution_param {
+    num_output: 32
+    kernel_size: 6 
+    stride: 4          # step 4 pixels between each filter application
+    weight_filler {
+      type: "gaussian" # initialize the filters from a Gaussian
+      std: 0.01        # distribution with stdev 0.01 (default mean: 0)
+    }
+    bias_filler {
+      type: "constant" # initialize the biases to zero (0)
+      value: 0.1
+    }
+  }
+}
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "conv1"
+  top: "conv2"
+  convolution_param {
+    num_output: 64
+    kernel_size: 6 
+    stride: 4          # step 4 pixels between each filter application
+    weight_filler {
+      type: "gaussian" # initialize the filters from a Gaussian
+      std: 0.01        # distribution with stdev 0.01 (default mean: 0)
+    }
+    bias_filler {
+      type: "constant" # initialize the biases to zero (0)
+      value: 0.1
+    }
+  }
+}
+layer {
+  name: "conv3"
+  type: "Convolution"
+  bottom: "conv2"
+  top: "conv3"
+  convolution_param {
+    num_output: 128 
+    kernel_size: 6
+    stride: 4          # step 4 pixels between each filter application
+    weight_filler {
+      type: "gaussian" # initialize the filters from a Gaussian
+      std: 0.01        # distribution with stdev 0.01 (default mean: 0)
+    }
+    bias_filler {
+      type: "constant" # initialize the biases to zero (0)
+      value: 0.1
+    }
+  }
+}
+layer {
+  name: "fc1"
+  type: "InnerProduct"
+  bottom: "conv3"
+  top: "fc1"
+  inner_product_param {
+    num_output: 1024 
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
+  }
+}
+layer {
+  name: "tanh1"
+  type: "TanH"
+  bottom: "fc1"
+  top: "fc1"
+}
+layer {
+  name: "fc3"
+  type: "InnerProduct"
+  bottom: "fc1"
+  top: "fc3"
+  inner_product_param {
+    num_output: 30000
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
+  }
+}
+#layer {
+#  name: "deconv1"
+#  type: "Deconvolution"
+#  bottom: "fc3"
+#  top: "deconv1"
+#  deconvolution_param {
+#    num_output: 128 
+#    kernel_size: 20
+#    stride: 4          # step 4 pixels between each filter application
+#    weight_filler {
+#      type: "gaussian" # initialize the filters from a Gaussian
+#      std: 0.01        # distribution with stdev 0.01 (default mean: 0)
+#    }
+#    bias_filler {
+#      type: "constant" # initialize the biases to zero (0)
+#      value: 0.1
+#    }
+#  }
+#}
+layer {
+  name: "loss"
+  type: "EuclideanLoss"
+  bottom: "fc3"
+  bottom: "flaten_target"
+  top: "loss"
+}

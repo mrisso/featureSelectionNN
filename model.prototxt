@@ -8,8 +8,8 @@ layer {
   memory_data_param {
     batch_size: 1
     channels: 3
-    height: 100 #370
-    width: 300 #1226
+    height: 123 #370
+    width: 204 #1226
   }
 }
 layer {
@@ -20,8 +20,8 @@ layer {
   memory_data_param {
     batch_size: 1
     channels: 1
-    height: 100 #370
-    width: 300 #1226
+    height: 123 #370
+    width: 204 #1226
   }
 }
 layer {
@@ -122,7 +122,7 @@ layer {
   bottom: "fc1"
   top: "fc3"
   inner_product_param {
-    num_output: 30000
+    num_output: 25092 
     weight_filler {
       type: "gaussian"
       std: 0.1

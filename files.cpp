@@ -5,6 +5,8 @@
 #define NUM_IMAGES_TO_TRAIN													10
 #define CLASS_MULTIPLIER													25
 
+#define DEBUG																0
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -74,20 +76,54 @@ void printVectors(vector<string> v)
 		cout << v[i] << "\n";
 }
 
+Mat imageSubsampling(Mat image)
+{
+	Mat sampledImage(Size(204,123),CV_8UC3);
+
+	for(int i = 0; i < sampledImage.rows; i++)
+	{
+		for(int j = 0; j < sampledImage.cols; j++)
+		{
+			int imageI = 3 * i;
+			int imageJ = j * 6;
+
+			if(imageI > image.rows || imageJ > image.cols)
+				printf("Maior! i: %i j: %i ii: %i ij: %i ir: %i ic: %i\n", i, j, imageI, imageJ, image.rows, image.cols);
+
+			int p = 3 * (imageI * image.cols + imageJ);
+			int q = 3 * (i * sampledImage.cols + j);
+
+			sampledImage.data[q + 0] = image.data[p + 0];
+			sampledImage.data[q + 1] = image.data[p + 1];
+			sampledImage.data[q + 2] = image.data[p + 2];
+		}
+	}
+
+	return sampledImage;
+}
+
 Mat readImage(string imageFileName, string dir)
 {
 	Mat image;
-	Mat imageResized(Size(300,100),CV_8UC3);
 
-	image = imread(dir + imageFileName,CV_LOAD_IMAGE_COLOR);
+	image = imread(dir + imageFileName);
 	if(!image.data)
 	{
 		cout << "Could not open image \n";
 		exit(ERROR_LOADING_IMAGE);
 	}
 
-	resize(image,imageResized,imageResized.size());
-	return imageResized;
+//		resize(image,imageResized,imageResized.size());
+	Mat sampledImage = imageSubsampling(image);
+
+	if(DEBUG)
+	{
+		imshow("Sampled Image",sampledImage);
+		imshow("Image",image);
+		waitKey(0);
+	}
+
+	return sampledImage;
 }
 
 int getClass(vector<pair<Scalar,int>> &v, Scalar color)
@@ -101,11 +137,10 @@ int getClass(vector<pair<Scalar,int>> &v, Scalar color)
 	return v.size() - 1;
 }
 
-Mat convertImageToClasses(Mat image)
+Mat convertImageToClasses(Mat image, vector<pair<Scalar,int>> &classColorRelationship)
 {
 	unsigned char b,g,r;
 	Mat classifiedImage(image.size(),CV_8UC1);
-	vector<pair<Scalar,int>> classColorRelationship;
 	for(int i = 0; i < image.rows; i++)
 	{
 		for(int j = 0; j < image.cols; j++)
@@ -125,6 +160,8 @@ Mat convertImageToClasses(Mat image)
 
 int main(void)
 {
+
+	vector<pair<Scalar,int>> classColorRelationship;
 	vector<string> imagesTrain;
 	vector<string> imagesTest;
 
@@ -167,13 +204,22 @@ int main(void)
 			Mat image = readImage(imagesTrain[p],IMAGES_PATH);
 			Mat targetImage = readImage(imagesTrain[p],TARGET_PATH);
 
+			if(DEBUG)
+			{
+				namedWindow("Image", WINDOW_AUTOSIZE);
+				imshow("Image",targetImage);
+				waitKey(0);
+			}
+
 			vector<Mat> v;
 			v.push_back(image);
 			
 			input->AddMatVector(v,dummyLabels);
 
 			vector<Mat> vTarget;
-			vTarget.push_back(convertImageToClasses(targetImage));
+			vTarget.push_back(convertImageToClasses(targetImage,classColorRelationship));
+
+			printf("classes: %ld\n", classColorRelationship.size());
 
 			target->AddMatVector(vTarget,dummyLabels);
 

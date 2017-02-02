@@ -20,6 +20,7 @@
 #include <ctype.h>
 
 #define USE_OPENCV
+#define CPU_ONLY
 
 #include <caffe/caffe.hpp>
 #include <caffe/solver.hpp>
@@ -158,6 +159,23 @@ Mat convertImageToClasses(Mat image, vector<pair<Scalar,int>> &classColorRelatio
 	return classifiedImage;
 }
 
+Mat convertClassesToImage(Mat classifiedImage, vector<pair<Scalar,int>> &classColorRelationship)
+{
+	Mat image(classifiedImage.size(),CV_8UC3);
+	for(int i = 0; i < image.rows; i++)
+	{
+		for(int j = 0; j < image.cols; j++)
+		{
+			Scalar color = classColorRelationship[classifiedImage.data[i * image.cols + j]].first;
+
+			image.data[3 * (i * image.cols + j) + 0] = color[0];
+			image.data[3 * (i * image.cols + j) + 1] = color[1];
+			image.data[3 * (i * image.cols + j) + 2] = color[2];
+		}
+	}
+	return image;
+}
+
 int main(void)
 {
 
@@ -194,6 +212,13 @@ int main(void)
 
 	vector<int> dummyLabels;
 	dummyLabels.push_back(0);
+
+//	Mat targetImage = readImage(imagesTrain[0],TARGET_PATH);
+//	Mat targetImageClasses = convertImageToClasses(targetImage, classColorRelationship);
+//	Mat targetImageBackToNormal = convertClassesToImage(targetImageClasses, classColorRelationship);
+//	bool isEqual = (sum(targetImage != targetImageBackToNormal) == Scalar(0,0,0,0));
+//	if(isEqual)
+//		printf("Deu Certo!");
 
 	while(!requested_to_exit)
 	{
@@ -234,17 +259,17 @@ int main(void)
 		}
 	}
 
-//	namedWindow("Image", WINDOW_AUTOSIZE);
-//	imshow("Image", imageResized);
-//
-//	namedWindow("Expected", WINDOW_AUTOSIZE);
-//	imshow("Expected",expectedImageResized);
-//	char key = waitKey(0);
-//
-//	if(key == 'p') i -= 1;
-//	if (key == 'n') i += 1;
-//	if (i < 0) i = size - 1;
-//	if (i >= size) i = 0;
-//
+	namedWindow("Image", WINDOW_AUTOSIZE);
+	imshow("Image", imageResized);
+
+	namedWindow("Expected", WINDOW_AUTOSIZE);
+	imshow("Expected",expectedImageResized);
+	char key = waitKey(0);
+
+	if(key == 'p') i -= 1;
+	if (key == 'n') i += 1;
+	if (i < 0) i = size - 1;
+	if (i >= size) i = 0;
+
 	return OK;
 }

@@ -20,7 +20,6 @@
 #include <ctype.h>
 
 #define USE_OPENCV
-#define CPU_ONLY
 
 #include <caffe/caffe.hpp>
 #include <caffe/solver.hpp>
@@ -259,17 +258,17 @@ int main(void)
 		}
 	}
 
-	namedWindow("Image", WINDOW_AUTOSIZE);
-	imshow("Image", imageResized);
-
-	namedWindow("Expected", WINDOW_AUTOSIZE);
-	imshow("Expected",expectedImageResized);
-	char key = waitKey(0);
-
-	if(key == 'p') i -= 1;
-	if (key == 'n') i += 1;
-	if (i < 0) i = size - 1;
-	if (i >= size) i = 0;
+//	namedWindow("Image", WINDOW_AUTOSIZE);
+//	imshow("Image", imageResized);
+//
+//	namedWindow("Expected", WINDOW_AUTOSIZE);
+//	imshow("Expected",expectedImageResized);
+//	char key = waitKey(0);
+//
+//	if(key == 'p') i -= 1;
+//	if (key == 'n') i += 1;
+//	if (i < 0) i = size - 1;
+//	if (i >= size) i = 0;
 
 	return OK;
 }

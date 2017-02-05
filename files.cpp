@@ -10,8 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <vector>
-
+#include <vector> 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -158,14 +157,29 @@ Mat convertImageToClasses(Mat image, vector<pair<Scalar,int>> &classColorRelatio
 	return classifiedImage;
 }
 
-Mat convertClassesToImage(Mat classifiedImage, vector<pair<Scalar,int>> &classColorRelationship)
+Mat convertClassesToImage(const float *classifiedImage,int rows, int cols, vector<pair<Scalar,int>> &classColorRelationship)
 {
-	Mat image(classifiedImage.size(),CV_8UC3);
-	for(int i = 0; i < image.rows; i++)
+	Mat image(rows,cols,CV_8UC3);
+	for(int i = 0; i < rows; i++)
 	{
-		for(int j = 0; j < image.cols; j++)
+		for(int j = 0; j < cols; j++)
 		{
-			Scalar color = classColorRelationship[classifiedImage.data[i * image.cols + j]].first;
+			float pd = classifiedImage[i * image.cols + j];
+			int pos;
+
+			if(pd > (classColorRelationship.size() - 1))
+				pos = classColorRelationship.size() - 1;
+
+			else if(pd < 0)
+				pos = 0;
+
+			else if(pd > (floor(pd) + 0.5))
+				pos = floor(pd) + 1;
+
+			else
+				pos = floor(pd);
+
+			Scalar color = classColorRelationship[pos].first;
 
 			image.data[3 * (i * image.cols + j) + 0] = color[0];
 			image.data[3 * (i * image.cols + j) + 1] = color[1];
@@ -251,6 +265,11 @@ int main(void)
 			totalLoss += net->blob_by_name("loss")->cpu_data()[0];
 		}
 		printf("total loss: %lf\n", totalLoss);
+
+		Mat outputImage = convertClassesToImage(net->blob_by_name("fc3")->cpu_data(),123,204,classColorRelationship);
+
+		imshow("Output Image",outputImage);
+		waitKey(0);
 
 		for(int i = 0; i < imagesTest.size(); i++)
 		{

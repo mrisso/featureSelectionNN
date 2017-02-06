@@ -19,6 +19,7 @@
 #include <ctype.h>
 
 #define USE_OPENCV
+#define CPU_ONLY
 
 #include <caffe/caffe.hpp>
 #include <caffe/solver.hpp>
@@ -197,8 +198,12 @@ bool showImage(vector<int> v, int number)
 	return false;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+	vector<int> numbers;
+	if(argc > 1)
+		for(int count = 0; count < argc; count++)
+			numbers.push_back(atoi(argv[count]));
 
 	vector<pair<Scalar,int>> classColorRelationship;
 	vector<string> imagesTrain;
@@ -244,15 +249,6 @@ int main(void)
 	int x = 0;
 	while(!requested_to_exit)
 	{
-		vector<int> numbers;
-		numbers.push_back(0);
-		numbers.push_back(1);
-		numbers.push_back(2);
-		numbers.push_back(3);
-		numbers.push_back(4);
-		numbers.push_back(15);
-		numbers.push_back(30);
-
 
 		double totalLoss = 0;
 		for(int i = 0; i < NUM_IMAGES_TO_TRAIN; i++)

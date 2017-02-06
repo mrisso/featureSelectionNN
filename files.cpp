@@ -189,6 +189,14 @@ Mat convertClassesToImage(const float *classifiedImage,int rows, int cols, vecto
 	return image;
 }
 
+bool showImage(vector<int> v, int number)
+{
+	for(int i = 0; i < v.size(); i++)
+		if(v[i] == number)
+			return true;
+	return false;
+}
+
 int main(void)
 {
 
@@ -232,9 +240,20 @@ int main(void)
 //	bool isEqual = (sum(targetImage != targetImageBackToNormal) == Scalar(0,0,0,0));
 //	if(isEqual)
 //		printf("Deu Certo!");
-
+	
+	int x = 0;
 	while(!requested_to_exit)
 	{
+		vector<int> numbers;
+		numbers.push_back(0);
+		numbers.push_back(1);
+		numbers.push_back(2);
+		numbers.push_back(3);
+		numbers.push_back(4);
+		numbers.push_back(15);
+		numbers.push_back(30);
+
+
 		double totalLoss = 0;
 		for(int i = 0; i < NUM_IMAGES_TO_TRAIN; i++)
 		{
@@ -266,10 +285,14 @@ int main(void)
 		}
 		printf("total loss: %lf\n", totalLoss);
 
-		Mat outputImage = convertClassesToImage(net->blob_by_name("fc3")->cpu_data(),123,204,classColorRelationship);
+		if(showImage(numbers,x))
+		{
+			Mat outputImage = convertClassesToImage(net->blob_by_name("fc3")->cpu_data(),123,204,classColorRelationship);
+			imshow("Output Image",outputImage);
+			waitKey(0);
+		}
 
-		imshow("Output Image",outputImage);
-		waitKey(0);
+		x++;
 
 		for(int i = 0; i < imagesTest.size(); i++)
 		{

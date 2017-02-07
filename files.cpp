@@ -39,6 +39,7 @@ const string IMAGE_TEST_FILE= "./test.txt";
 
 const string IMAGES_PATH = "./semantics/images/";
 const string TARGET_PATH = "./semantics/labels_new/";
+const string RESULTS_PATH = "./results/";
 
 int requested_to_exit = 0;
 
@@ -190,6 +191,43 @@ Mat convertClassesToImage(const float *classifiedImage,int rows, int cols, vecto
 	return image;
 }
 
+Mat imgCompare(Mat image, Mat expectedImage)
+{
+	Mat compImage(image.size(),CV_8UC3);
+	unsigned char b,g,r;
+
+	for(int i = 0; i < image.rows; i++)
+		for(int j = 0; j < image.cols; j++)
+		{
+			b = image.data[3 * (i * image.cols + j) + 0];
+			g = image.data[3 * (i * image.cols + j) + 1];
+			r = image.data[3 * (i * image.cols + j) + 2];
+
+			Scalar imageColor(b,g,r);
+			
+			b = expectedImage.data[3 * (i * expectedImage.cols + j) + 0];
+			g = expectedImage.data[3 * (i * expectedImage.cols + j) + 1];
+			r = expectedImage.data[3 * (i * expectedImage.cols + j) + 2];
+
+			Scalar expectedColor(b,g,r);
+
+			if(expectedColor == imageColor)
+			{
+				compImage.data[3 * (i * compImage.cols + j) + 0] = 0;
+				compImage.data[3 * (i * compImage.cols + j) + 1] = 0;
+				compImage.data[3 * (i * compImage.cols + j) + 2] = 0;
+			}
+
+			else
+			{
+				compImage.data[3 * (i * compImage.cols + j) + 0] = 255;
+				compImage.data[3 * (i * compImage.cols + j) + 1] = 255;
+				compImage.data[3 * (i * compImage.cols + j) + 2] = 255;
+			}
+		}
+	return compImage;
+}
+
 bool showImage(vector<int> v, int number)
 {
 	for(int i = 0; i < v.size(); i++)
@@ -202,7 +240,7 @@ int main(int argc, char **argv)
 {
 	vector<int> numbers;
 	if(argc > 1)
-		for(int count = 0; count < argc; count++)
+		for(int count = 1; count < argc; count++)
 			numbers.push_back(atoi(argv[count]));
 
 	vector<pair<Scalar,int>> classColorRelationship;
@@ -239,13 +277,9 @@ int main(int argc, char **argv)
 	vector<int> dummyLabels;
 	dummyLabels.push_back(0);
 
-//	Mat targetImage = readImage(imagesTrain[0],TARGET_PATH);
-//	Mat targetImageClasses = convertImageToClasses(targetImage, classColorRelationship);
-//	Mat targetImageBackToNormal = convertClassesToImage(targetImageClasses, classColorRelationship);
-//	bool isEqual = (sum(targetImage != targetImageBackToNormal) == Scalar(0,0,0,0));
-//	if(isEqual)
-//		printf("Deu Certo!");
-	
+	vector<int> compressionParams;
+	compressionParams.push_back(CV_IMWRITE_JPEG_QUALITY);
+	compressionParams.push_back(100);
 	int x = 0;
 	while(!requested_to_exit)
 	{
@@ -272,32 +306,66 @@ int main(int argc, char **argv)
 			vector<Mat> vTarget;
 			vTarget.push_back(convertImageToClasses(targetImage,classColorRelationship));
 
-			printf("classes: %ld\n", classColorRelationship.size());
+			if(DEBUG)
+				printf("classes: %ld\n", classColorRelationship.size());
 
 			target->AddMatVector(vTarget,dummyLabels);
 
 			solver->Step(2);
 			totalLoss += net->blob_by_name("loss")->cpu_data()[0];
+
+			if(showImage(numbers,x) && i == (NUM_IMAGES_TO_TRAIN - 1))
+			{
+				Mat outputImage = convertClassesToImage(net->blob_by_name("fc3")->cpu_data(),123,204,classColorRelationship);
+				Mat compImage = imgCompare(outputImage, targetImage);
+
+				try{
+					imwrite(RESULTS_PATH + to_string(x) + "-image.jpg", image, compressionParams);
+				}
+				catch (runtime_error& ex){
+					printf("Exception converting image to JPG format: %s\n", ex.what());
+					return 1;
+				}
+
+				try{
+			   		imwrite(RESULTS_PATH + to_string(x) + "-labels.jpg", targetImage, compressionParams);
+				}
+				catch (runtime_error& ex){
+					printf("Exception converting label image to JPG format: %s\n", ex.what());
+					return 1;
+				}
+
+				try{
+					imwrite(RESULTS_PATH + to_string(x) + "-net.jpg", outputImage, compressionParams);
+				}
+				catch (runtime_error& ex){
+					printf("Exception converting net image to JPG format: %s\n", ex.what());
+					return 1;
+				}
+
+				try{
+					imwrite(RESULTS_PATH + to_string(x) + "-comp.jpg", compImage, compressionParams);
+				}
+				catch (runtime_error& ex){
+					printf("Exception converting comp image to JPG format: %s\n", ex.what());
+					return 1;
+				}
+			}
+
 		}
 		printf("total loss: %lf\n", totalLoss);
 
-		if(showImage(numbers,x))
-		{
-			Mat outputImage = convertClassesToImage(net->blob_by_name("fc3")->cpu_data(),123,204,classColorRelationship);
-			imshow("Output Image",outputImage);
-			waitKey(0);
-		}
-
 		x++;
 
-		for(int i = 0; i < imagesTest.size(); i++)
-		{
+//		for(int i = 0; i < imagesTest.size(); i++)
+//		{
+//
+//		}
 
-		}
 	}
 
 //	namedWindow("Image", WINDOW_AUTOSIZE);
-//	imshow("Image", imageResized);
+//	//	imshow("Image", imageResized);
 //
 //	namedWindow("Expected", WINDOW_AUTOSIZE);
 //	imshow("Expected",expectedImageResized);

@@ -23,11 +23,11 @@ We are currently in **development** and **testing** phases and it's uses are sti
 
 ## Usage
 
-For now, you can run it by typing ./a.out with some numbers as arguments. The numbers represent which iteration step you want the network to show the output image. For example:
+For now, you can run it by typing ./a.out with some numbers as arguments. The numbers represent which iteration step you want the network to save the output image. For example:
 
 ```
 ./a.out 0 5
 ```
-In this case, the program will show you the network output after the first(0) and sixth(5) iterations.
+In this case, the program will save the network output into "results" folder after the first(0) and sixth(5) iterations. It also saves, for future comparison, the corresponding image and expected labels, and a map showing the "wrong" pixels as white and the right ones as black.
 
 You can also tweak the network by editing the model and solver files

@@ -311,11 +311,11 @@ int main(int argc, char **argv)
 
 			target->AddMatVector(vTarget,dummyLabels);
 
-			solver->Step(2);
-			totalLoss += net->blob_by_name("loss")->cpu_data()[0];
+			net->ForwardPrefilled((float*)&totalLoss);
 
 			if(showImage(numbers,x) && i == (NUM_IMAGES_TO_TRAIN - 1))
 			{
+				printf("total loss: %lf\n", totalLoss);
 				Mat outputImage = convertClassesToImage(net->blob_by_name("fc3")->cpu_data(),123,204,classColorRelationship);
 				Mat compImage = imgCompare(outputImage, targetImage);
 
@@ -350,10 +350,12 @@ int main(int argc, char **argv)
 					printf("Exception converting comp image to JPG format: %s\n", ex.what());
 					return 1;
 				}
-			}
 
+				printf("Image %i saved.\n", x);
+			}
+			solver->Step(2);
+			totalLoss += net->blob_by_name("loss")->cpu_data()[0];
 		}
-		printf("total loss: %lf\n", totalLoss);
 
 		x++;
 

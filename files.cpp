@@ -6,6 +6,7 @@
 #define CLASS_MULTIPLIER													25
 
 #define DEBUG																0
+#define TRAINING_DEBUG														0
 
 #include <iostream>
 #include <fstream>
@@ -40,6 +41,7 @@ const string IMAGE_TEST_FILE= "./test.txt";
 const string IMAGES_PATH = "./semantics/images/";
 const string TARGET_PATH = "./semantics/labels_new/";
 const string RESULTS_PATH = "./results/";
+const string RESULTS_PATH_DEBUG = "./results/debug/";
 
 int requested_to_exit = 0;
 
@@ -311,16 +313,16 @@ int main(int argc, char **argv)
 
 			target->AddMatVector(vTarget,dummyLabels);
 
-			net->ForwardPrefilled((float*)&totalLoss);
+			net->Forward((float*)&totalLoss);
 
-			if(showImage(numbers,x) && i == (NUM_IMAGES_TO_TRAIN - 1))
+			if(TRAINING_DEBUG && showImage(numbers,x) && i == (NUM_IMAGES_TO_TRAIN - 1))
 			{
 				printf("total loss: %lf\n", totalLoss);
 				Mat outputImage = convertClassesToImage(net->blob_by_name("fc3")->cpu_data(),123,204,classColorRelationship);
 				Mat compImage = imgCompare(outputImage, targetImage);
 
 				try{
-					imwrite(RESULTS_PATH + to_string(x) + "-image.jpg", image, compressionParams);
+					imwrite(RESULTS_PATH_DEBUG + to_string(x) + "-image.jpg", image, compressionParams);
 				}
 				catch (runtime_error& ex){
 					printf("Exception converting image to JPG format: %s\n", ex.what());
@@ -328,7 +330,7 @@ int main(int argc, char **argv)
 				}
 
 				try{
-			   		imwrite(RESULTS_PATH + to_string(x) + "-labels.jpg", targetImage, compressionParams);
+			   		imwrite(RESULTS_PATH_DEBUG + to_string(x) + "-labels.jpg", targetImage, compressionParams);
 				}
 				catch (runtime_error& ex){
 					printf("Exception converting label image to JPG format: %s\n", ex.what());
@@ -336,7 +338,7 @@ int main(int argc, char **argv)
 				}
 
 				try{
-					imwrite(RESULTS_PATH + to_string(x) + "-net.jpg", outputImage, compressionParams);
+					imwrite(RESULTS_PATH_DEBUG + to_string(x) + "-net.jpg", outputImage, compressionParams);
 				}
 				catch (runtime_error& ex){
 					printf("Exception converting net image to JPG format: %s\n", ex.what());
@@ -344,7 +346,7 @@ int main(int argc, char **argv)
 				}
 
 				try{
-					imwrite(RESULTS_PATH + to_string(x) + "-comp.jpg", compImage, compressionParams);
+					imwrite(RESULTS_PATH_DEBUG + to_string(x) + "-comp.jpg", compImage, compressionParams);
 				}
 				catch (runtime_error& ex){
 					printf("Exception converting comp image to JPG format: %s\n", ex.what());
@@ -353,30 +355,67 @@ int main(int argc, char **argv)
 
 				printf("Image %i saved.\n", x);
 			}
+
 			solver->Step(2);
 			totalLoss += net->blob_by_name("loss")->cpu_data()[0];
 		}
 
+
+		for(int i = 0; i < imagesTest.size(); i++)
+		{
+			Mat image = readImage(imagesTest[i],IMAGES_PATH);
+			Mat targetImage = readImage(imagesTest[i],TARGET_PATH);
+
+			vector<Mat> v;
+			v.push_back(image);
+			
+			input->AddMatVector(v,dummyLabels);
+
+			net->Forward((float*)&totalLoss);
+
+			if(showImage(numbers,x))
+			{
+				Mat outputImage = convertClassesToImage(net->blob_by_name("fc3")->cpu_data(),123,204,classColorRelationship);
+				Mat compImage = imgCompare(outputImage, targetImage);
+
+				try{
+					imwrite(RESULTS_PATH + to_string(x) + "-" + to_string(i) + "-image.jpg", image, compressionParams);
+				}
+				catch (runtime_error& ex){
+					printf("Exception converting image to JPG format: %s\n", ex.what());
+					return 1;
+				}
+
+				try{
+			   		imwrite(RESULTS_PATH + to_string(x) + "-" + to_string(i) + "-labels.jpg", targetImage, compressionParams);
+				}
+				catch (runtime_error& ex){
+					printf("Exception converting label image to JPG format: %s\n", ex.what());
+					return 1;
+				}
+
+				try{
+					imwrite(RESULTS_PATH + to_string(x) + "-" + to_string(i) + "-net.jpg", outputImage, compressionParams);
+				}
+				catch (runtime_error& ex){
+					printf("Exception converting net image to JPG format: %s\n", ex.what());
+					return 1;
+				}
+
+				try{
+					imwrite(RESULTS_PATH + to_string(x) + "-" + to_string(i) + "-comp.jpg", compImage, compressionParams);
+				}
+				catch (runtime_error& ex){
+					printf("Exception converting comp image to JPG format: %s\n", ex.what());
+					return 1;
+				}
+
+				printf("Image %i-%i saved.\n", x, i);
+			}
+		}
+
 		x++;
-
-//		for(int i = 0; i < imagesTest.size(); i++)
-//		{
-//
-//		}
-
 	}
-
-//	namedWindow("Image", WINDOW_AUTOSIZE);
-//	//	imshow("Image", imageResized);
-//
-//	namedWindow("Expected", WINDOW_AUTOSIZE);
-//	imshow("Expected",expectedImageResized);
-//	char key = waitKey(0);
-//
-//	if(key == 'p') i -= 1;
-//	if (key == 'n') i += 1;
-//	if (i < 0) i = size - 1;
-//	if (i >= size) i = 0;
 
 	return OK;
 }

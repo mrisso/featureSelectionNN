@@ -1,0 +1,6 @@
+net: "pixelwise_model_conv.prototxt"
+base_lr: 0.00001
+lr_policy: "fixed"
+snapshot_prefix: "snapshot"
+solver_type: RMSPROP
+solver_mode: GPU

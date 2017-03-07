@@ -75,13 +75,13 @@ layer {
     }
   }
 }
-layer {
-  name: "accuracy"
-  type: "Accuracy"
-  bottom: "fc2"
-  bottom: "label"
-  top: "accuracy"
-}
+#layer {
+#  name: "accuracy"
+#  type: "Accuracy"
+#  bottom: "fc2"
+#  bottom: "label"
+#  top: "accuracy"
+#}
 layer {
   name: "loss"
   type: "SoftmaxWithLoss"

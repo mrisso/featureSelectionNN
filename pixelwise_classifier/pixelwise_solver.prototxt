@@ -1,5 +1,5 @@
 net: "pixelwise_model_conv.prototxt"
-base_lr: 0.00001
+base_lr: 0.0001
 lr_policy: "fixed"
 snapshot_prefix: "snapshot"
 solver_type: RMSPROP

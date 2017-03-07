@@ -113,6 +113,20 @@ imageSubsampling(Mat image)
 
 
 Mat 
+correctImage(Mat &image)
+{
+	Mat corr(Size(1226, 370), image.type());
+
+	for (int i = 0; i < 370; i++)
+		for (int j = 0; j < 1226; j++)
+			for (int c = 0; c < image.channels(); c++)
+				corr.data[corr.channels() * (i * corr.cols + j) + c] = image.data[image.channels() * (i * image.cols + j) + c];
+
+	return corr;
+}
+
+
+Mat 
 readImage(string imageFileName, string dir, bool subsampling = false)
 {
 	Mat image;
@@ -123,6 +137,9 @@ readImage(string imageFileName, string dir, bool subsampling = false)
 		cout << "Could not open image \n";
 		exit(ERROR_LOADING_IMAGE);
 	}
+
+	if (image.rows != 370)
+		image = correctImage(image);
 
 	Mat sampledImage;
 
@@ -145,7 +162,7 @@ readImage(string imageFileName, string dir, bool subsampling = false)
 int 
 getClass(vector<pair<Scalar,int>> &v, Scalar color)
 {
-	for(int i = 0; i<v.size(); i++)
+	for(unsigned int i = 0; i<v.size(); i++)
 	{
 		if(v[i].first == color)
 			return v[i].second;
@@ -287,7 +304,7 @@ imgCompare(Mat image, Mat expectedImage)
 bool 
 showImage(vector<int> v, int number)
 {
-	for(int i = 0; i < v.size(); i++)
+	for(unsigned int i = 0; i < v.size(); i++)
 		if(v[i] == number)
 			return true;
 	return false;
@@ -297,9 +314,9 @@ showImage(vector<int> v, int number)
 int
 sample_class(const float *v, int n)
 {
+#if 0
 	int i;
 	vector<double> ps(n, 0.0);
-	double min_v = DBL_MAX;
 	double sum = 0.0;
 
 	for (i = 0; i < n; i++)
@@ -333,6 +350,18 @@ sample_class(const float *v, int n)
 
 	// it shouldn't happen
 	return rand() % n;
+#else
+
+	int m = 0;
+
+	for (int i = 1; i < n; i++)
+		if (v[i] > v[m])
+			m = i;
+
+	return m;
+
+#endif
+
 }
 
 
@@ -379,7 +408,6 @@ main(int argc, char **argv)
 	vector<int> compressionParams;
 	compressionParams.push_back(CV_IMWRITE_JPEG_QUALITY);
 	compressionParams.push_back(100);
-	int x = 0;
 
 	printf("imagesTrain.size(): %ld\n", imagesTrain.size());
 	namedWindow("Image", WINDOW_AUTOSIZE);
@@ -425,7 +453,7 @@ main(int argc, char **argv)
 
 				//printf("Prediction: %d Expected: %d\n", pred, label);				
 
-				if (k % 10 == 0)
+				if (k % 5 == 0)
 				{
 					Mat view = image.clone();
 					rectangle(view, r, Scalar(0,0,255), 2);
@@ -455,7 +483,6 @@ main(int argc, char **argv)
 			Mat miniTarget = Mat::zeros(image.rows / 4, image.cols / 8, CV_8UC1);
 			Mat estimatedClasses = Mat::zeros(image.rows / 4, image.cols / 8, CV_8UC1);
 
-			int a, b;
 			for (int row = 0, a = 0; row < (image.rows - AREA_SIZE); row += 4, a++)
 			{
 				//printf("Testing row %d of %d\n", row, image.rows - AREA_SIZE);
@@ -469,7 +496,7 @@ main(int argc, char **argv)
 
 					Mat area(image, r);
 
-					if ((row * image.cols + col) % 400 == 0)
+					if ((row * image.cols + col) % 100 == 0)
 					{
 						Mat view = image.clone();
 						rectangle(view, r, Scalar(0,0,255), 2);

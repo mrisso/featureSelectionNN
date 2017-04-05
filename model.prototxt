@@ -111,6 +111,15 @@ layer {
   }
 }
 layer {
+  name: "dropout"
+  type: "Dropout"
+  bottom: "fc1"
+  top: "fc1"
+  dropout_param {
+    dropout_ratio: 0.5
+ }
+}
+layer {
   name: "tanh1"
   type: "TanH"
   bottom: "fc1"

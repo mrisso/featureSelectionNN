@@ -105,6 +105,19 @@ Mat imageSubsampling(Mat image)
 	return sampledImage;
 }
 
+Mat 
+correctImage(Mat &image)
+{
+	Mat corr(Size(1226, 370), image.type());
+
+	for (int i = 0; i < 370; i++)
+		for (int j = 0; j < 1226; j++)
+			for (int c = 0; c < image.channels(); c++)
+				corr.data[corr.channels() * (i * corr.cols + j) + c] = image.data[image.channels() * (i * image.cols + j) + c];
+
+	return corr;
+}
+
 Mat readImage(string imageFileName, string dir)
 {
 	Mat image;
@@ -115,6 +128,9 @@ Mat readImage(string imageFileName, string dir)
 		cout << "Could not open image \n";
 		exit(ERROR_LOADING_IMAGE);
 	}
+
+	if(image.rows != 370)
+		image = correctImage(image);
 
 //		resize(image,imageResized,imageResized.size());
 	Mat sampledImage = imageSubsampling(image);
@@ -302,7 +318,6 @@ int main(int argc, char **argv)
 
 			vector<Mat> v;
 			v.push_back(image);
-			
 			input->AddMatVector(v,dummyLabels);
 
 			vector<Mat> vTarget;
@@ -410,8 +425,8 @@ int main(int argc, char **argv)
 					return 1;
 				}
 
-				printf("Image %i-%i saved.\n", x, i);
 			}
+			printf("Images %i saved.\n", x);
 		}
 
 		x++;

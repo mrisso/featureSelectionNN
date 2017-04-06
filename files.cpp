@@ -374,6 +374,7 @@ int main(int argc, char **argv)
 			solver->Step(2);
 			totalLoss += net->blob_by_name("loss")->cpu_data()[0];
 		}
+		printf("Total Loss: %lf", totalLoss);
 
 
 		for(int i = 0; i < imagesTest.size(); i++)
@@ -426,7 +427,8 @@ int main(int argc, char **argv)
 				}
 
 			}
-			printf("Images %i saved.\n", x);
+			if(i == imagesTest.size())
+				printf("Images %i saved.\n", x);
 		}
 
 		x++;
